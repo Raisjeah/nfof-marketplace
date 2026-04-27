@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-start-rgb));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom Selection: Teks jadi putih, background jadi hitam saat diblok */
+::selection {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Menghilangkan scrollbar tapi tetap bisa di-scroll (Clean Look) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Utilities untuk Branding NFOF */
+@layer components {
+  .nfof-heading {
+    @apply font-black italic uppercase tracking-tighter;
+  }
+  
+  .btn-primary {
+    @apply bg-black text-white px-8 py-4 rounded-full font-bold uppercase tracking-widest hover:bg-gray-900 transition-all active:scale-95;
+  }
+
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-2xl border border-white/20 shadow-xl;
+  }
+}
