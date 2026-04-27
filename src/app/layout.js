@@ -1,20 +1,14 @@
-'use client'
-import BottomNav from "@/components/layout/BottomNav";
-import { useState } from "react";
+import "./globals.css";
 
-export default function ShopLayout({ children }) {
-  const [activeTab, setActiveTab] = useState('home');
+export const metadata = {
+  title: "NFOF Marketplace",
+  description: "No Fear of Failure - AI Powered Marketplace",
+};
 
+export default function RootLayout({ children }) {
   return (
-    <div className="min-h-screen">
-      {/* Konten halaman (Home, Catalog, dll) */}
-      {children}
-
-      {/* 
-         Panggil Komponen BottomNav di sini! 
-         Hanya halaman di dalam folder (shop) yang akan punya BottomNav ini.
-      */}
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
-    </div>
+    <html lang="en">
+      <body>{children}</body>
+    </html>
   );
 }

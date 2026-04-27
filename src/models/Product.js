@@ -7,6 +7,7 @@ const ProductSchema = new mongoose.Schema({
   category: { type: String },
   image: { type: String },
   description: { type: String },
+  sizes: [String],
 }, { timestamps: true });
 
 export default mongoose.models.Product || mongoose.model('Product', ProductSchema);
