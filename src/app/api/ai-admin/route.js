@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { geminiModel } from '@/lib/gemini';
+import { geminiAdmin } from '@/lib/gemini';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
 
