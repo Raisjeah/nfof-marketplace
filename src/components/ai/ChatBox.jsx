@@ -1,8 +1,10 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { X, Zap, Send } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { X, Zap, Send, Lock } from 'lucide-react';
 
 export default function ChatBox({ isOpen, onClose }) {
+  const { data: session } = useSession();
   const [messages, setMessages] = useState([
     { role: 'ai', text: 'Halo! Saya asisten NFOF. Ada yang bisa saya bantu pilihkan hari ini?' }
   ]);
@@ -17,9 +19,11 @@ export default function ChatBox({ isOpen, onClose }) {
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || !session) return;
 
     const userMsg = { role: 'user', text: input };
+    const history = messages.map(m => ({ role: m.role, text: m.text }));
+
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
@@ -28,10 +32,15 @@ export default function ChatBox({ isOpen, onClose }) {
       const res = await fetch('/api/ai-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: input, history }),
       });
       const data = await res.json();
-      setMessages(prev => [...prev, { role: 'ai', text: data.text }]);
+
+      if (res.status === 401) {
+        setMessages(prev => [...prev, { role: 'ai', text: 'Waduh King, lo harus login dulu biar bisa ngobrol asik sama gue! 😎' }]);
+      } else {
+        setMessages(prev => [...prev, { role: 'ai', text: data.text }]);
+      }
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: 'Maaf, saya sedang mengalami gangguan. Coba lagi nanti.' }]);
     } finally {
@@ -61,14 +70,22 @@ export default function ChatBox({ isOpen, onClose }) {
         {loading && <p className="text-xs text-gray-400 italic">AI sedang mengetik...</p>}
       </div>
       <div className="p-4 bg-white border-t flex gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Tanya asisten NFOF..."
-          className="flex-1 p-3 bg-gray-100 rounded-full outline-none text-sm"
-        />
-        <button onClick={sendMessage} className="p-3 bg-black text-white rounded-full"><Send size={18} /></button>
+        {session ? (
+          <>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              placeholder="Tanya asisten NFOF..."
+              className="flex-1 p-3 bg-gray-100 rounded-full outline-none text-sm"
+            />
+            <button onClick={sendMessage} className="p-3 bg-black text-white rounded-full"><Send size={18} /></button>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-100 rounded-full text-xs font-bold uppercase tracking-widest text-gray-400">
+            <Lock size={14} /> Login to Chat
+          </div>
+        )}
       </div>
     </div>
   );

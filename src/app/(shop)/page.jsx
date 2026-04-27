@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { ArrowDown, Zap, ShieldCheck, Info } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import BottomNav from '@/components/layout/BottomNav';
@@ -8,9 +9,9 @@ import ModalLogin from '@/components/ui/ModalLogin';
 import { Button } from '@/components/ui/Button';
 
 export default function LandingPage() {
+  const { data: session } = useSession();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <div className="min-h-screen bg-white text-black font-sans">
@@ -89,12 +90,12 @@ export default function LandingPage() {
       </section>
 
       <ChatBox isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-      <ModalLogin isOpen={showLogin} onClose={() => setShowLogin(false)} onLogin={() => { setIsLoggedIn(true); setShowLogin(false); }} />
+      <ModalLogin isOpen={showLogin} onClose={() => setShowLogin(false)} />
       <BottomNav
         activeTab="home"
         setActiveTab={() => {}}
         onOpenChat={() => setIsChatOpen(true)}
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={!!session}
         onOpenLogin={() => setShowLogin(true)}
       />
     </div>
