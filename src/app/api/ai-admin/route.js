@@ -1,44 +1,40 @@
 import { NextResponse } from 'next/server';
-import { geminiAdmin } from '@/lib/gemini';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
+import { runAdminCommand } from '@/lib/gemini';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
 
 export async function POST(req) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: "Unauthorized. Admin only." }, { status: 403 });
+    }
+
     const { command } = await req.json();
     await dbConnect();
 
-    const products = await Product.find({});
-    const prompt = `You are an Admin Manager AI for NFOF Marketplace.
-    Current Inventory: ${JSON.stringify(products)}.
-    Admin Command: "${command}"
+    const data = await runAdminCommand(command);
 
-    Your task is to interpret the command and return a JSON object that can be used to update the database.
-    Format: { "action": "update_stock" | "update_price", "productName": string, "value": number }
-    If you cannot interpret it, return { "error": "command not understood" }.
-    Only return the JSON.`;
-
-    const result = await geminiModel.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    // Basic parsing logic (Gemini sometimes adds markdown code blocks)
-    const jsonStr = text.replace(/```json|```/g, '').trim();
-    const data = JSON.parse(jsonStr);
-
-    if (data.action === 'update_stock') {
-      await Product.findOneAndUpdate(
-        { name: { $regex: new RegExp(data.productName, 'i') } },
-        { $inc: { stock: data.value } }
-      );
-    } else if (data.action === 'update_price') {
-      await Product.findOneAndUpdate(
-        { name: { $regex: new RegExp(data.productName, 'i') } },
-        { price: data.value }
-      );
+    if (data.action === 'ERROR') {
+      return NextResponse.json({ error: data.message || "Gagal memproses perintah." }, { status: 400 });
     }
 
-    return NextResponse.json({ message: "Action executed successfully", data });
+    if (data.action === 'UPDATE' && data.target === 'PRODUCT') {
+      const { name, ...payload } = data.payload;
+      await Product.findOneAndUpdate(
+        { name: { $regex: new RegExp(name, 'i') } },
+        { $set: payload }
+      );
+    } else if (data.action === 'CREATE' && data.target === 'PRODUCT') {
+      await Product.create(data.payload);
+    } else if (data.action === 'DELETE' && data.target === 'PRODUCT') {
+      await Product.findOneAndDelete({ name: { $regex: new RegExp(data.payload.name, 'i') } });
+    }
+
+    return NextResponse.json({ message: data.message || "Action executed successfully", data });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

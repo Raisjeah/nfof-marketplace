@@ -1,7 +1,25 @@
+'use client';
 import Link from 'next/link';
+import { useSession, signOut } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { LayoutDashboard, Box, ShoppingCart, LogOut } from 'lucide-react';
 
+import { usePathname } from 'next/navigation';
+
 export default function AdminLayout({ children }) {
+  const { data: session, status } = useSession();
+  const pathname = usePathname();
+
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  if (status === "loading") return <div className="p-12 text-center font-bold tracking-widest animate-pulse">VERIFYING ADMIN ACCESS...</div>;
+
+  if (!session || session.user.role !== 'admin') {
+    redirect('/admin/login');
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <aside className="w-64 bg-black text-white p-8 flex flex-col gap-8">
@@ -17,7 +35,10 @@ export default function AdminLayout({ children }) {
             <ShoppingCart size={16} /> Orders
           </Link>
         </nav>
-        <button className="flex items-center gap-3 font-bold uppercase text-[10px] tracking-widest text-red-500">
+        <button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="flex items-center gap-3 font-bold uppercase text-[10px] tracking-widest text-red-500"
+        >
           <LogOut size={16} /> Logout
         </button>
       </aside>

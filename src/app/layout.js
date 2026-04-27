@@ -1,4 +1,5 @@
 import "./globals.css";
+import NextAuthProvider from "@/components/providers/SessionProvider";
 
 export const metadata = {
   title: "NFOF Marketplace",
@@ -8,7 +9,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <NextAuthProvider>
+          {children}
+        </NextAuthProvider>
+      </body>
     </html>
   );
 }
