@@ -2,15 +2,10 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import dbConnect from '@/lib/mongodb';
-import Product from '@/models/Product';
+import Order from '@/models/Order';
+import User from '@/models/User'; // Ensure User model is loaded for populate
 
 export async function GET() {
-  await dbConnect();
-  const products = await Product.find({});
-  return NextResponse.json(products);
-}
-
-export async function POST(req) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -19,15 +14,9 @@ export async function POST(req) {
     }
 
     await dbConnect();
-    const data = await req.json();
+    const orders = await Order.find({}).populate('user', 'name email').sort({ createdAt: -1 });
 
-    // Auto-generate slug if not provided
-    if (!data.slug && data.name) {
-      data.slug = data.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-    }
-
-    const product = await Product.create(data);
-    return NextResponse.json(product);
+    return NextResponse.json(orders);
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

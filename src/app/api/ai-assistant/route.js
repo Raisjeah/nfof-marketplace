@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { chatAsUser } from '@/lib/gemini';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
+import User from '@/models/User';
 
 export async function POST(req) {
   try {
@@ -16,10 +17,15 @@ export async function POST(req) {
     const { message, history = [] } = await req.json();
     await dbConnect();
 
-    // Get all products to provide context to Gemini
-    const products = await Product.find({});
+    // Fetch user profile for personalized sizing
+    const user = await User.findById(session.user.id).select('height weight');
 
-    const responseText = await chatAsUser(history, message, products);
+    // Get all products to provide context to Gemini (limited fields to save tokens)
+    const products = await Product.find({ stock: { $gt: 0 } })
+      .select('name price description stock sizes category')
+      .limit(20);
+
+    const responseText = await chatAsUser(history, message, products, user || {});
 
     return NextResponse.json({ text: responseText });
   } catch (error) {

@@ -29,6 +29,15 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Featured Drop Marquee */}
+      <div className="bg-white border-y border-black py-4 overflow-hidden whitespace-nowrap">
+        <div className="inline-block animate-marquee">
+          {[1,2,3,4,5].map(i => (
+            <span key={i} className="text-[10px] font-black uppercase tracking-[0.5em] mx-12">New Drop: AW24 "Resilience" Collection — Out Now — AI Assisted Sizing</span>
+          ))}
+        </div>
+      </div>
+
       {/* Philosophy Section */}
       <section className="py-32 px-6 md:px-20 max-w-5xl mx-auto">
         <div className="grid md:grid-cols-2 gap-16 items-center">

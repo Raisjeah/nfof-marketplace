@@ -22,8 +22,13 @@ export default function AICommandCenter() {
       if (data.error) {
         setStatus(`Error: ${data.error}`);
       } else {
-        setStatus(`Success: ${JSON.stringify(data.data)}`);
+        const { action, target, message } = data.data;
+        setStatus(`[${action}] ${target}: ${message}`);
         setCommand('');
+        // Trigger a refresh if the parent provides one
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('refresh-data'));
+        }
       }
     } catch (error) {
       setStatus('Failed to execute command.');
