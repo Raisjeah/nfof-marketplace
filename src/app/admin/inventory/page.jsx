@@ -1,9 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import AICommandCenter from '@/components/ai/AICommandCenter';
+import ProductFormModal from './ProductFormModal';
+import { Plus } from 'lucide-react';
 
 export default function AdminInventory() {
   const [products, setProducts] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchProducts = () => {
     fetch('/api/products')
@@ -23,10 +26,24 @@ export default function AdminInventory() {
     <div className="space-y-12">
       <div className="flex justify-between items-center">
         <h1 className="text-4xl font-black italic uppercase tracking-tighter">Inventory Management</h1>
-        <button onClick={fetchProducts} className="text-[10px] font-bold uppercase border-b border-black">Refresh Data</button>
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-black text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-all"
+          >
+            <Plus size={14} /> Add Product
+          </button>
+          <button onClick={fetchProducts} className="text-[10px] font-bold uppercase border-b border-black">Refresh Data</button>
+        </div>
       </div>
 
       <AICommandCenter />
+
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchProducts}
+      />
 
       <div className="bg-white rounded-[2rem] shadow-sm overflow-hidden border">
         <table className="w-full text-left">

@@ -23,7 +23,13 @@ export async function POST(req) {
 
     // Auto-generate slug if not provided
     if (!data.slug && data.name) {
-      data.slug = data.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+      let slug = data.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+      // Basic collision avoidance
+      const existing = await Product.findOne({ slug });
+      if (existing) {
+        slug = `${slug}-${Math.floor(Math.random() * 1000)}`;
+      }
+      data.slug = slug;
     }
 
     const product = await Product.create(data);

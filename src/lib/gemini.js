@@ -60,6 +60,9 @@ Skema JSON yang diizinkan:
     "price": number (opsional),
     "stock": number (opsional),
     "category": string (opsional),
+    "description": string (opsional),
+    "image": string (opsional - URL gambar),
+    "sizes": string[] (opsional - array of strings misal ["S", "M"]),
     "status": string (opsional - untuk order: 'pending', 'shipped', 'delivered', 'cancelled')
   },
   "message": "Pesan konfirmasi singkat untuk owner"
