@@ -36,8 +36,11 @@ export default function ChatBox({ isOpen, onClose }) {
       });
       const data = await res.json();
 
-      if (res.status === 401) {
-        setMessages(prev => [...prev, { role: 'ai', text: 'Waduh King, lo harus login dulu biar bisa ngobrol asik sama gue! 😎' }]);
+      if (!res.ok) {
+        setMessages(prev => [...prev, {
+          role: 'ai',
+          text: data.error || 'Waduh King, ada gangguan teknis nih. Coba lagi ya! 🥶'
+        }]);
       } else {
         setMessages(prev => [...prev, { role: 'ai', text: data.text }]);
       }

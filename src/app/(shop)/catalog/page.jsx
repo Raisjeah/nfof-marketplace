@@ -1,17 +1,35 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Navbar from '@/components/layout/Navbar';
 import BottomNav from '@/components/layout/BottomNav';
 import ProductCard from '@/components/ui/ProductCard';
 import ChatBox from '@/components/ai/ChatBox';
+import ModalLogin from '@/components/ui/ModalLogin';
+import { CheckCircle2, X } from 'lucide-react';
 
-export default function CatalogPage() {
+function CatalogContent() {
+  const { data: session } = useSession();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [category, setCategory] = useState('All');
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const categories = ['All', 'Tees', 'Hoodies', 'Outerwear', 'Pants', 'Accessories'];
+
+  useEffect(() => {
+    if (searchParams.get('login') === 'success') {
+      setShowSuccess(true);
+      // Remove the query param from URL without refreshing
+      window.history.replaceState({}, '', '/catalog');
+      const timer = setTimeout(() => setShowSuccess(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetch('/api/products')
@@ -33,6 +51,15 @@ export default function CatalogPage() {
   return (
     <div className="min-h-screen bg-white pb-32">
       <Navbar />
+
+      {showSuccess && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-black text-white px-6 py-4 rounded-full flex items-center gap-3 shadow-2xl animate-bounce">
+          <CheckCircle2 className="text-green-400" size={20} />
+          <span className="text-xs font-bold uppercase tracking-widest">Login Berhasil! Selamat Belanja, King.</span>
+          <button onClick={() => setShowSuccess(false)}><X size={14} /></button>
+        </div>
+      )}
+
       <div className="pt-32 px-6 md:px-20">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
           <div>
@@ -66,13 +93,22 @@ export default function CatalogPage() {
       </div>
 
       <ChatBox isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <ModalLogin isOpen={showLogin} onClose={() => setShowLogin(false)} />
       <BottomNav
         activeTab="catalog"
         setActiveTab={() => {}}
         onOpenChat={() => setIsChatOpen(true)}
-        isLoggedIn={false}
-        onOpenLogin={() => {}}
+        isLoggedIn={!!session}
+        onOpenLogin={() => setShowLogin(true)}
       />
     </div>
+  );
+}
+
+export default function CatalogPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center font-bold uppercase tracking-widest animate-pulse">Loading Collections...</div>}>
+      <CatalogContent />
+    </Suspense>
   );
 }

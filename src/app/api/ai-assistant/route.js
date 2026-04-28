@@ -11,10 +11,14 @@ export async function POST(req) {
     const session = await getServerSession(authOptions);
 
     if (!session) {
-      return NextResponse.json({ error: "Silakan login terlebih dahulu untuk menggunakan asisten AI." }, { status: 401 });
+      return NextResponse.json({
+        error: "Silakan login terlebih dahulu untuk menggunakan asisten AI.",
+        status: "UNAUTHENTICATED"
+      }, { status: 401 });
     }
 
-    const { message, history = [] } = await req.json();
+    const body = await req.json();
+    const { message, history = [] } = body;
     await dbConnect();
 
     // Fetch user profile for personalized sizing
@@ -27,9 +31,16 @@ export async function POST(req) {
 
     const responseText = await chatAsUser(history, message, products, user || {});
 
+    if (!responseText) {
+      throw new Error("AI gagal memberikan respon. Coba lagi, King.");
+    }
+
     return NextResponse.json({ text: responseText });
   } catch (error) {
     console.error("AI Assistant API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({
+      error: error.message || "Waduh, otak gue lagi nge-hang. Coba lagi bentar ya!",
+      status: "ERROR"
+    }, { status: 500 });
   }
 }
