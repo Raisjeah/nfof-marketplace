@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { runAdminCommand } from '@/lib/gemini';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
+import Order from '@/models/Order';
 
 export async function POST(req) {
   try {
@@ -22,16 +23,23 @@ export async function POST(req) {
       return NextResponse.json({ error: data.message || "Gagal memproses perintah." }, { status: 400 });
     }
 
-    if (data.action === 'UPDATE' && data.target === 'PRODUCT') {
-      const { name, ...payload } = data.payload;
-      await Product.findOneAndUpdate(
-        { name: { $regex: new RegExp(name, 'i') } },
-        { $set: payload }
-      );
-    } else if (data.action === 'CREATE' && data.target === 'PRODUCT') {
-      await Product.create(data.payload);
-    } else if (data.action === 'DELETE' && data.target === 'PRODUCT') {
-      await Product.findOneAndDelete({ name: { $regex: new RegExp(data.payload.name, 'i') } });
+    if (data.target === 'PRODUCT') {
+      if (data.action === 'UPDATE') {
+        const { id, name, ...payload } = data.payload;
+        const query = id ? { _id: id } : { name: { $regex: new RegExp(name, 'i') } };
+        await Product.findOneAndUpdate(query, { $set: payload });
+      } else if (data.action === 'CREATE') {
+        await Product.create(data.payload);
+      } else if (data.action === 'DELETE') {
+        const { id, name } = data.payload;
+        const query = id ? { _id: id } : { name: { $regex: new RegExp(name, 'i') } };
+        await Product.findOneAndDelete(query);
+      }
+    } else if (data.target === 'ORDER') {
+      if (data.action === 'UPDATE') {
+        const { id, status } = data.payload;
+        await Order.findByIdAndUpdate(id, { $set: { status } });
+      }
     }
 
     return NextResponse.json({ message: data.message || "Action executed successfully", data });

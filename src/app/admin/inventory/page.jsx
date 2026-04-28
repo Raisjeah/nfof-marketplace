@@ -13,6 +13,10 @@ export default function AdminInventory() {
 
   useEffect(() => {
     fetchProducts();
+
+    const handleRefresh = () => fetchProducts();
+    window.addEventListener('refresh-data', handleRefresh);
+    return () => window.removeEventListener('refresh-data', handleRefresh);
   }, []);
 
   return (

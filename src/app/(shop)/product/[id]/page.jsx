@@ -13,12 +13,14 @@ export default function ProductDetailPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
-    // Normally fetch by ID, but for this mock we'll fetch all and find
-    fetch('/api/products')
+    fetch(`/api/products/${id}`)
       .then(res => res.json())
       .then(data => {
-        const found = data.find(p => p._id === id);
-        setProduct(found);
+        if (data.error) {
+          console.error(data.error);
+        } else {
+          setProduct(data);
+        }
       });
   }, [id]);
 

@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Pastikan API Key tersedia di file .env.local
-const apiKey = process.env.GOOGLE_API_KEY;
+const apiKey = process.env.GOOGLE_AI_API_KEY;
 
 if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is missing in environment variables.");
+  throw new Error("GOOGLE_AI_API_KEY is missing in environment variables.");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -14,19 +14,19 @@ const genAI = new GoogleGenerativeAI(apiKey);
 // ============================================================================
 const userSystemInstruction = `
 Lo adalah asisten AI resmi untuk toko clothing brand bernama "NFOF" (No Fear of Failure).
-Gaya bahasa lo: Santai, sedikit dingin (cold/cool), menggunakan kata sapaan "lo/gue" atau "King/Boss", sangat profesional tapi bergaya street-wear.
+Gaya bahasa lo: Santai, sedikit dingin (cold/cool), menggunakan kata sapaan "lo/gue" atau "King/Boss", sangat profesional tapi bergaya street-wear. Gunakan istilah kalcer seperti "gahar", "legit check", "skena", "drop", "cop".
 
-PERATURAN MUTLAK (JIKA DILANGGAR, SISTEM AKAN RUSAK):
+PERATURAN MUTLAK:
 1. JANGAN PERNAH membuat harga palsu, diskon palsu, atau ukuran yang tidak ada di data.
-2. Jika pengguna bertanya tentang barang yang TIDAK ADA dalam konteks data yang diberikan, jawab: "Maaf King, stok barang itu lagi kosong atau emang belum rilis di NFOF."
+2. Jika pengguna bertanya tentang barang yang TIDAK ADA dalam konteks data yang diberikan, jawab: "Maaf King, stok barang itu lagi kosong atau emang belum rilis di NFOF. Pantau terus drop berikutnya."
 3. JANGAN PERNAH menyarankan pengguna membeli dari toko lain.
-4. JANGAN memberikan janji pengiriman atau kebijakan retur di luar dari standar NFOF (Pengiriman dari Timor-Leste/Global memakan waktu standar, retur hanya untuk barang cacat produksi).
-5. Jika ditanya pertanyaan di luar fashion, NFOF, atau pemesanan (misal: coding, matematika, politik), jawab: "Gue di sini cuma buat ngurusin outfit lo biar makin gahar. Pertanyaan lain skip dulu ya, King."
+4. Jika ditanya pertanyaan di luar fashion, NFOF, atau pemesanan, jawab: "Gue di sini cuma buat ngurusin outfit lo biar makin gahar. Pertanyaan lain skip dulu ya, King."
+5. Gunakan data profil user (tinggi/berat) jika tersedia untuk memberikan rekomendasi ukuran yang "legit".
 
 Tugas utama lo:
 - Merekomendasikan outfit berdasarkan cuaca, acara, atau gaya yang diinginkan pengguna.
-- Membantu pengguna menemukan ukuran yang tepat.
-- Menjawab singkat, padat, dan jelas. Jangan memberikan jawaban yang terlalu panjang seperti robot buku teks.
+- Membantu pengguna menemukan ukuran yang tepat (sizing guide).
+- Menjawab singkat, padat, dan jelas.
 `;
 
 const userConfig = {
@@ -55,17 +55,20 @@ Skema JSON yang diizinkan:
   "action": "CREATE" | "UPDATE" | "DELETE",
   "target": "PRODUCT" | "ORDER",
   "payload": {
-    "name": string (opsional),
+    "name": string (opsional - untuk produk),
+    "id": string (opsional - ID order atau produk),
     "price": number (opsional),
     "stock": number (opsional),
-    "category": string (opsional)
+    "category": string (opsional),
+    "status": string (opsional - untuk order: 'pending', 'shipped', 'delivered', 'cancelled')
   },
   "message": "Pesan konfirmasi singkat untuk owner"
 }
 
 Aturan Admin:
 1. JANGAN HALUSINASI angka. Pakai angka yang disebutkan owner secara tepat.
-2. Jika perintah tidak jelas, kembalikan action "ERROR".
+2. Jika perintah adalah untuk update order, pastikan target adalah "ORDER" dan sertakan status baru di payload.
+3. Jika perintah tidak jelas, kembalikan action "ERROR".
 `;
 
 const adminConfig = {
@@ -87,12 +90,14 @@ export const geminiAdmin = genAI.getGenerativeModel({
 /**
  * Fungsi untuk Chat User (Style & Katalog)
  */
-export async function chatAsUser(history, userMessage, availableProducts) {
+export async function chatAsUser(history, userMessage, availableProducts, userProfile = {}) {
   try {
     const productContext = `
       Berikut adalah katalog produk NFOF yang TERSEDIA SAAT INI (Gunakan data ini sebagai sumber KEBENARAN TUNGGAL):
-      ${JSON.stringify(availableProducts, ['name', 'price', 'description', 'stock'])}
+      ${JSON.stringify(availableProducts, ['name', 'price', 'description', 'stock', 'sizes'])}
     `;
+
+    const profileContext = userProfile.height ? `Profil User: Tinggi ${userProfile.height}cm, Berat ${userProfile.weight}kg.` : 'Profil User: Tidak diketahui.';
 
     const chat = geminiUser.startChat({
       history: history.map(msg => ({
@@ -101,7 +106,7 @@ export async function chatAsUser(history, userMessage, availableProducts) {
       })),
     });
 
-    const prompt = `Konteks Katalog: ${productContext}\n\nPertanyaan User: ${userMessage}`;
+    const prompt = `Konteks Katalog: ${productContext}\n${profileContext}\n\nPertanyaan User: ${userMessage}`;
     const result = await chat.sendMessage(prompt);
     return result.response.text();
   } catch (error) {
