@@ -8,11 +8,11 @@ export default function ModalLogin({ isOpen, onClose }) {
   const [password, setPassword] = useState('');
 
   const handleCredentialsLogin = async () => {
-    await signIn('credentials', { email, password, callbackUrl: '/' });
+    await signIn('credentials', { email, password, callbackUrl: '/catalog?login=success' });
   };
 
   const handleGoogleLogin = async () => {
-    await signIn('google', { callbackUrl: '/' });
+    await signIn('google', { callbackUrl: '/catalog?login=success' });
   };
 
   if (!isOpen) return null;
