@@ -35,12 +35,21 @@ export const authOptions = {
       if (account.provider === "google") {
         await dbConnect();
         const existingUser = await User.findOne({ email: user.email });
+
+        // Cek apakah email ini termasuk dalam daftar ADMIN_EMAILS
+        const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',').map(e => e.trim()) : [];
+        const isDefaultAdmin = adminEmails.includes(user.email);
+        const assignedRole = isDefaultAdmin ? 'admin' : 'user';
+
         if (!existingUser) {
           await User.create({
             name: user.name,
             email: user.email,
-            role: 'user'
+            role: assignedRole
           });
+        } else if (isDefaultAdmin && existingUser.role !== 'admin') {
+          // Update role jika user sudah ada tapi belum admin dan masuk dalam daftar ADMIN_EMAILS
+          await User.updateOne({ email: user.email }, { role: 'admin' });
         }
       }
       return true;
