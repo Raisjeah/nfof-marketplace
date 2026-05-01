@@ -1,7 +1,9 @@
-import { create } from 'zustand';
+'use client';
+import { useState } from 'react';
 
-export const useChat = create((set) => ({
-  messages: [],
-  addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
-  clearMessages: () => set({ messages: [] }),
-}));
+export function useChat() {
+  const [messages, setMessages] = useState([]);
+  const addMessage = (message) => setMessages((prev) => [...prev, message]);
+  const clearMessages = () => setMessages([]);
+  return { messages, addMessage, clearMessages };
+}
