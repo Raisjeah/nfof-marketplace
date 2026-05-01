@@ -1,0 +1,1 @@
+export function Modal({ open, children }) { if (!open) return null; return <div className="fixed inset-0 grid place-items-center bg-white/80"><div className="border border-black bg-white p-6">{children}</div></div>; }
