@@ -1,30 +1,45 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    './src/app/**/*.{js,jsx,mdx}',
+    './src/components/**/*.{js,jsx,mdx}',
+    './src/lib/**/*.{js,jsx,mdx}',
+    './src/store/**/*.{js,jsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        // Warna Hitam Khas NFOF
-        black: "#000000",
-        dark: "#0A0A0A",
-        // Warna Biru Aksen AI
-        nfofBlue: "#2563eb",
+        background: '#FFFFFF',
+        foreground: '#000000',
+        zinc: {
+          100: '#f4f4f5',
+          200: '#e4e4e7',
+          300: '#d4d4d8',
+          400: '#a1a1aa',
+          500: '#71717a',
+          600: '#52525b',
+          700: '#3f3f46',
+          800: '#27272a',
+          900: '#18181b',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'Geist', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       letterSpacing: {
-        tighter: "-0.05em",
-        widest: "0.4em",
+        tight: '-0.025em',
+        tighter: '-0.05em',
+      },
+      borderWidth: {
+        DEFAULT: '1px',
       },
       borderRadius: {
-        '4xl': '2rem',
-        '5xl': '3rem',
+        none: '0px',
+        sm: '2px',
       },
-      animation: {
-        'bounce-slow': 'bounce 3s infinite',
-      }
+      boxShadow: {
+        none: 'none',
+      },
     },
   },
   plugins: [],
